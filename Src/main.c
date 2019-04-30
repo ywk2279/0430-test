@@ -66,6 +66,7 @@ static void MX_GPIO_Init(void);
 void ShiftClock(void);
 void LatchClock(void);
 void ByteDataWrite(uint8_t data);
+void ByteDataWrite2(uint8_t data);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -83,6 +84,7 @@ int main(void)
 
 
    uint8_t index = 0;
+   uint8_t count = 0;
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -115,10 +117,28 @@ int main(void)
      uint8_t pattern = 1 << index;
      index = (index + 1) % 8;
 
-     ByteDataWrite(pattern);
-     HAL_Delay(300);
 
+     if (count == 1)
+     {
+        ByteDataWrite(pattern);
+        HAL_Delay(300);
+     }
+     else
+     {
+        ByteDataWrite2(pattern);
+        HAL_Delay(300);
+     }
 
+     if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_0) == 0)
+     {
+        HAL_Delay(10);
+        count = 1;
+     }
+     else if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1) == 0)
+     {
+        HAL_Delay(10);
+        count = 0;
+     }
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
@@ -241,7 +261,21 @@ void ByteDataWrite(uint8_t data)
 
    LatchClock();
 }
+void ByteDataWrite2(uint8_t data)
+{
+   for (uint8_t i=0;i<8;i++)
+   {
+      if (data & 0x01)
+         HAL_GPIO_WritePin(DATAPORT, DATA, GPIO_PIN_SET);
+      else
+         HAL_GPIO_WritePin(DATAPORT, DATA, GPIO_PIN_RESET);
 
+      ShiftClock();
+      data = data >> 1;
+   }
+
+   LatchClock();
+}
 /* USER CODE END 4 */
 
 /**
